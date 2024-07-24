@@ -1,1 +1,36 @@
 /* You can add global styles to this file, and also import other style files */
+
+html,
+body {
+    height: 100%;
+    background-color: gray;
+}
+
+body {
+    margin: 0;
+    font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+.flex {
+    display: flex;
+}
+
+.ml-4 {
+    margin-left: 16px;
+}
+
+.m-0 {
+    margin: 0 !important;
+}
+
+.p-2 {
+    padding: 8px;
+}
+
+.w-20 {
+    width: 80px;
+}
+
+.items-center {
+    align-items: center;
+}
