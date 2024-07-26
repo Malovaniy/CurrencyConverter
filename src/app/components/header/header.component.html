@@ -1,7 +1,7 @@
-<header class="flex items-center p-2">
+<header class="flex items-center p-2" *ngIf="(this.currencyService.rates$ | async)?.USD">
   <h1 class="m-0">Currency Converter</h1>
   <div class="flex ml-4">
-    <div>USD to UAH: {{ usdToUah }}</div>
-    <div class="ml-4">EUR to UAH: {{ eurToUah }}</div>
+    <div>USD to UAH: {{ (this.currencyService.rates$ | async)?.USD?.UAH }}</div>
+    <div class="ml-4">EUR to UAH: {{ (this.currencyService.rates$ | async)?.EUR?.UAH }}</div>
   </div>
 </header>

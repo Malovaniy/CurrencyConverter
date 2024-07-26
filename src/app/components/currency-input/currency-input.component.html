@@ -1,0 +1,14 @@
+<div>
+  <mat-form-field appearance="fill" class="full-width">
+    <mat-label>Amount</mat-label>
+    <input matInput type="number" [value]="amount" (input)="onAmountChange($event.target)" />
+  </mat-form-field>
+  <mat-form-field appearance="fill" class="w-20">
+    <mat-label>Currency</mat-label>
+    <mat-select [value]="currency" (selectionChange)="onCurrencyChange($event.value)">
+      <mat-option *ngFor="let currency of currencies" [value]="currency">{{
+        currency
+        }}</mat-option>
+    </mat-select>
+  </mat-form-field>
+</div>

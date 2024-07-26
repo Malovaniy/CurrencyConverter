@@ -1,11 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CurrencyService } from '../../services/currency.service';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { switchMap } from 'rxjs/operators';
-import { NgFor } from '@angular/common';
+import { FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
+import { AsyncPipe, NgFor, NgIf } from '@angular/common';
+import { CurrencyInputComponent } from '../currency-input/currency-input.component';
 import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-converter',
@@ -13,59 +15,70 @@ import { MatFormFieldModule } from '@angular/material/form-field';
   styleUrls: ['./converter.component.scss'],
   imports: [
     NgFor,
+    NgIf,
     ReactiveFormsModule,
     MatInputModule,
     MatSelectModule,
+    AsyncPipe,
     MatFormFieldModule,
+    CurrencyInputComponent,
   ],
   standalone: true,
+  providers: [AsyncPipe],
 })
 export class ConverterComponent implements OnInit {
+  private _unsubscribeAll: Subject<void> = new Subject<void>();
+
   currencies = ['UAH', 'USD', 'EUR'];
-  conversionForm!: FormGroup;
-  result?: number;
+  inputControl = this.fb.control({ amount: 0, currency: 'UAH' });
+  outputControl = this.fb.control({ amount: 0, currency: 'USD' });
 
   constructor(
-    private currencyService: CurrencyService,
-    private fb: FormBuilder
+    public currencyService: CurrencyService,
+    private fb: FormBuilder,
+    private asyncPipe: AsyncPipe
   ) {}
 
   ngOnInit(): void {
-    this.conversionForm = this.fb.group({
-      input: this.fb.group({
-        amount: [''],
-        currency: ['UAH'],
-      }),
-      output: this.fb.group({
-        amount: [''],
-        currency: ['UAH'],
-      }),
-    });
+    this.setupValueChangeHandler();
+  }
 
-    this.conversionForm
-      .get('input')!
-      .valueChanges.pipe(
-        switchMap((value) => this.currencyService.getRates(value.currency))
+  private setupValueChangeHandler(): void {
+    this.inputControl.valueChanges
+      .pipe(
+        takeUntil(this._unsubscribeAll),
+        distinctUntilChanged(),
+        debounceTime(400)
       )
-      .subscribe((data) => {
-        const input = this.conversionForm.get('input')!;
-        const output = this.conversionForm.get('output')!;
-        const rate = data.conversion_rates[output.get('currency')!.value];
-        const amount2 = input.get('amount')!.value * rate;
-        output.get('amount')!.setValue(amount2, { emitEvent: false });
+      .subscribe(() => {
+        this.updateAmount(this.inputControl, this.outputControl);
       });
+    this.outputControl.valueChanges
+      .pipe(
+        takeUntil(this._unsubscribeAll),
+        distinctUntilChanged(),
+        debounceTime(400)
+      )
+      .subscribe(() => {
+        this.updateAmount(this.outputControl, this.inputControl);
+      });
+  }
 
-    this.conversionForm
-      .get('output')!
-      .valueChanges.pipe(
-        switchMap((value) => this.currencyService.getRates(value.currency))
-      )
-      .subscribe((data) => {
-        const input = this.conversionForm.get('input')!;
-        const output = this.conversionForm.get('output')!;
-        const rate = data.conversion_rates[input.get('currency')!.value];
-        const amount1 = output.get('amount')!.value * rate;
-        input.get('amount')!.setValue(amount1, { emitEvent: false });
-      });
+  private updateAmount(controlIn: FormControl, controlOut: FormControl): void {
+    const rate = this.asyncPipe.transform(this.currencyService.rates$)![
+      controlIn.value.currency
+    ];
+    controlOut.setValue(
+      {
+        amount: rate[controlOut.value.currency] * controlIn.value.amount,
+        currency: controlOut.value.currency,
+      },
+      { emitEvent: false }
+    );
+  }
+
+  ngOnDestroy(): void {
+    this._unsubscribeAll.next();
+    this._unsubscribeAll.complete();
   }
 }

@@ -1,27 +1,4 @@
-<div [formGroup]="conversionForm" class="p-2">
-    <div formGroupName="input">
-      <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Amount 1</mat-label>
-        <input matInput type="number" formControlName="amount">
-      </mat-form-field>
-      <mat-form-field appearance="fill" class="w-20">
-        <mat-label>Currency 1</mat-label>
-        <mat-select formControlName="currency">
-          <mat-option *ngFor="let currency of currencies" [value]="currency">{{ currency }}</mat-option>
-        </mat-select>
-      </mat-form-field>
-    </div>
-    <div formGroupName="output">
-      <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Amount 2</mat-label>
-        <input matInput type="number" formControlName="amount">
-      </mat-form-field>
-      <mat-form-field appearance="fill" class="w-20">
-        <mat-label>Currency 2</mat-label>
-        <mat-select formControlName="currency">
-          <mat-option *ngFor="let currency of currencies" [value]="currency">{{ currency }}</mat-option>
-        </mat-select>
-      </mat-form-field>
-    </div>
-  </div>
-  
+<div class="p-2">
+  <app-currency-input [formControl]="inputControl" [currencies]="currencies"></app-currency-input>
+  <app-currency-input [formControl]="outputControl" [currencies]="currencies"></app-currency-input>
+</div>
